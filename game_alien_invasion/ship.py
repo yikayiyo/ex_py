@@ -1,5 +1,4 @@
 #-*- ecoding:utf-8 -*-
-'''该脚本XXXX'''
 import pygame
 
 class Ship():
