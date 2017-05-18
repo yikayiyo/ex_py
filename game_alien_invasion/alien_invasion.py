@@ -1,5 +1,5 @@
 #-*- ecoding:utf-8 -*-
-'''该脚本XXXX'''
+
 import sys
 import pygame
 from settings import Settings
