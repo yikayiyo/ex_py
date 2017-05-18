@@ -1,4 +1,5 @@
 #-*- ecoding:utf-8 -*-
+'''飞船类'''
 import pygame
 
 class Ship():
