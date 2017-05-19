@@ -29,7 +29,7 @@ def mycount(list):
         return 1 + mycount(list[1:])
 
 def binary_search_rec(list,item,low,high):
-
+    #递归二分查找
     if(low<=high):
         mid=(low+high)/2
         if(item==list[mid]):
