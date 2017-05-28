@@ -1,5 +1,5 @@
 #-*- ecoding:utf-8 -*-
-'''图,广度遍历，在非加权图中查找最短路径'''
+'''图,借助队列实现广度遍历算法，在非加权图中查找最短路径'''
 from collections import deque
 
 def person_is_seller(name):
