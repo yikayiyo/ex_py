@@ -70,5 +70,15 @@ while node is not None:
     processed.append(node)
     node = find_lowest_cost_node(costs)
 
+
+str=["fin"]
+while parents["fin"]!="start":
+    str.append(parents["fin"])
+    tmp = parents["fin"]
+    parents["fin"] = parents[tmp]
+str.append(parents["fin"])
 print '最短路径为：'
-print costs["fin"]
+print "->".join(str[::-1])
+print '长度为：'+costs["fin"].__str__()
+
+
