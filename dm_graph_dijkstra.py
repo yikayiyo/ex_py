@@ -20,24 +20,34 @@ def find_lowest_cost_node(costs):
 def init():
     graph = {}
     graph["start"] = {}
-    graph["start"]["a"] = 6
+    graph["start"]["a"] = 1
     graph["start"]["b"] = 2
     graph["a"] = {}
-    graph["a"]["fin"] = 1
+    graph["a"]["d"] = 3
+    graph["a"]["c"] = 7
     graph["b"] = {}
-    graph["b"]["fin"] = 5
-    graph["b"]["a"] = 3
+    graph["b"]["d"] = 8
+    graph["b"]["c"] = 5
+    graph["d"] = {}
+    graph["c"] = {}
+    graph["c"]["fin"] = 3
+
+
     graph["fin"] = {}
     # 开销表
     infinity = float("inf")
     costs = {}
-    costs["a"] = 6
+    costs["a"] = 1
     costs["b"] = 2
+    costs["c"] = infinity
+    costs["d"] = infinity
     costs["fin"] = infinity
     # 存储父节点
     parents = {}
     parents["a"] = "start"
     parents["b"] = "start"
+    parents["c"] = None
+    parents["d"] = None
     parents["fin"] = None
     # 处理过的节点
     processed = []
@@ -60,4 +70,5 @@ while node is not None:
     processed.append(node)
     node = find_lowest_cost_node(costs)
 
-print '最短路径为：start->' + "->".join(processed)
+print '最短路径为：'
+print costs["fin"]
