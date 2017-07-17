@@ -8,6 +8,7 @@ import re
 import json
 import requests
 from Crypto.Cipher import AES
+# from Crypto import AES
 import base64
 import codecs
 from time import ctime
@@ -45,9 +46,10 @@ def url_2_api(integer, url):
 def get_json(url, params, encSecKey):
     data = {
         "params": params,
-        "encSecKey": encSecKey
+        "encSecKey": encSecKey,
     }
-    response = requests.post(url, headers=headers, data=data)
+    proxies = {"http": "http://127.0.0.1:8087", "https": "http://127.0.0.1:8087", }
+    response = requests.post(url, headers=headers, data=data,proxies=proxies)
     return response.content
 
 
