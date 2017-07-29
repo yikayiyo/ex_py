@@ -1,6 +1,5 @@
 #-*- ecoding:utf-8 -*-
 '''快速排序'''
-
 def quicksort(array):
     if len(array) < 2:
         return array
