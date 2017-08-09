@@ -1,10 +1,12 @@
-#-*- encoding:utf-8 -*-
+# -*- encoding:utf-8 -*-
 from scrapy import Request
 from scrapy.spiders import Spider
-from demo_scrapy.items import DoubanMovieItem
 import random
-class DoubanMovieTop250Spider(Spider):
 
+from demo_scrapy.items import DoubanMovieItem
+
+
+class DoubanMovieTop250Spider(Spider):
     def rand_agent(self):
         user_agent = [
             "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
@@ -55,7 +57,7 @@ class DoubanMovieTop250Spider(Spider):
 
     def parse(self, response):
         item = DoubanMovieItem()
-        #movies = response.xpath('//ol[@class="grid_view"]/li')
+        # movies = response.xpath('//ol[@class="grid_view"]/li')
         movies = response.xpath('//*[@id="content"]/div/div[1]/ol/li')
 
         for movie in movies:
@@ -73,7 +75,7 @@ class DoubanMovieTop250Spider(Spider):
             item['score_num'] = movie.xpath(
                 './/div[@class="star"]/span/text()').re(ur'(\d+)人评价')[0]
             yield item
-        #//*[@id="content"]/div/div[1]/div[2]/span[3]/a/@href
+        # //*[@id="content"]/div/div[1]/div[2]/span[3]/a/@href
         next_url = response.xpath('//span[@class="next"]/a/@href').extract()
         if next_url:
             next_url = 'https://movie.douban.com/top250' + next_url[0]
