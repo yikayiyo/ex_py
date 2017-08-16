@@ -12,6 +12,8 @@ from Crypto.Cipher import AES
 import base64
 import codecs
 from time import ctime
+from wordcloud import WordCloud
+import jieba.analyse
 
 # 头部信息
 headers = {
@@ -76,9 +78,9 @@ def get_encSecKey():
 
 # 获取一定页数的评论
 def get_cmts(url_cmt, mypages):
-    cmt_list = []
     # 第一行内容
-    cmt_list.append(u"用户ID 用户昵称 用户头像地址 评论时间 点赞总数 评论内容\n")
+    # cmt_list.append(u"用户ID 用户昵称 用户头像地址 评论时间 点赞总数 评论内容\n")
+    # cmt_list.append(u"评论内容\n")
     params = get_params(1)
     encSecKey = get_encSecKey()
     json_text = get_json(url_cmt, params, encSecKey)
@@ -91,16 +93,17 @@ def get_cmts(url_cmt, mypages):
     print("共有%d页评论!" % page)
     print "共:", comments_num, "条!"
     if mypages == 0:
-        getcmt_by_page(cmt_list, encSecKey, page, url_cmt)
+        cmt_list=getcmt_by_page(encSecKey, page, url_cmt)
     elif mypages <= page:
-        getcmt_by_page(cmt_list, encSecKey, mypages, url_cmt)
+        cmt_list=getcmt_by_page(encSecKey, mypages, url_cmt)
     else:
-        getcmt_by_page(cmt_list, encSecKey, page, url_cmt)
+        cmt_list=getcmt_by_page(encSecKey, page, url_cmt)
     return cmt_list
 
 
 # 逐页抓取
-def getcmt_by_page(cmt_list, encSecKey, mypages, url_cmt):
+def getcmt_by_page(encSecKey, mypages, url_cmt):
+    cmt_list=[]
     for i in range(mypages):
         params = get_params(i + 1)
         encSecKey = get_encSecKey()
@@ -108,15 +111,16 @@ def getcmt_by_page(cmt_list, encSecKey, mypages, url_cmt):
         json_dict = json.loads(json_text)
         for item in json_dict['comments']:
             comment = item['content']  # 评论内容
-            likedCount = item['likedCount']  # 点赞总数
-            comment_time = item['time']  # 评论时间(时间戳)
-            userID = item['user']['userId']  # 评论者id
-            nickname = item['user']['nickname']  # 昵称
-            avatarUrl = item['user']['avatarUrl']  # 头像地址
-            comment_info = unicode(userID) + u" " + nickname + u" " + avatarUrl + u" " + unicode(
-                comment_time) + u" " + unicode(likedCount) + u" " + comment + u"\n"
-            cmt_list.append(comment_info)
-        print("第%d页抓取完毕!" % (i + 1))
+            # likedCount = item['likedCount']  # 点赞总数
+            # comment_time = item['time']  # 评论时间(时间戳)
+            # userID = item['user']['userId']  # 评论者id
+            # nickname = item['user']['nickname']  # 昵称
+            # avatarUrl = item['user']['avatarUrl']  # 头像地址
+            # comment_info = unicode(userID) + u" " + nickname + u" " + avatarUrl + u" " + unicode(
+            #     comment_time) + u" " + unicode(likedCount) + u" " + comment + u"\n"
+            # cmt_list.append(comment_info)
+            cmt_list.extend(comment)
+        print("第%d页抓取完毕!" % ( i + 1))
     return cmt_list
 
 
@@ -126,6 +130,20 @@ def save_to_file(fn, list):
         f.writelines(list)
     print("写入文件成功!")
 
+def show(cmts_list):
+    #基于TextRank算法的关键词抽取
+    tags = jieba.analyse.textrank(''.join(cmts_list), topK=20, withWeight=False, allowPOS=('ns', 'n', 'vn', 'v'))
+    text = unicode(" ".join(tags))
+
+    # Generate a word cloud image
+    font_path = '/usr/share/fonts/myfont/SourceHanSerifCN/SourceHanSerifCN-Medium.otf'
+    wordcloud = WordCloud(font_path=font_path).generate(text)
+    # Display the generated image:
+    # the matplotlib way:
+    import matplotlib.pyplot as plt
+    plt.imshow(wordcloud)
+    plt.axis("off")
+    plt.show()
 
 def test():
     print "开始时间:", ctime()
@@ -142,7 +160,10 @@ def test():
     pages = int(raw_input("请输入要爬取的页数:(0代表全部)"))
 
     cmts_list = get_cmts(url_cmt, pages)
-    save_to_file(filename, cmts_list)
+    # for item in cmts_list:
+    #     print item
+    # save_to_file(filename, cmts_list)
+    show(cmts_list)
     print "结束时间:", ctime()
 
 
