@@ -142,7 +142,7 @@ def test():
     pages = int(raw_input("请输入要爬取的页数:(0代表全部)"))
 
     cmts_list = get_cmts(url_cmt, pages)
-    save_to_file(filename, cmts_list)
+    # save_to_file(filename, cmts_list)
     print "结束时间:", ctime()
 
 
