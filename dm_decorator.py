@@ -70,7 +70,6 @@ def memo(fn):
             result = fn(*args)
             cache[args] = result
         return result
-
     return wrapper
 
 
@@ -79,8 +78,6 @@ def fib(n):
     if n < 2:
         return n
     return fib(n - 1) + fib(n - 2)
-
-
 
 if __name__ == '__main__':
     # foo()
