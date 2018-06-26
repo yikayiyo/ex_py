@@ -44,8 +44,8 @@ def fit_and_save(model,optimizer,input_data,target):
     checkpoint.save(file_prefix=checkpoint_directory)
 
 def restore_model(model,optimizer):
-    # Reinitialize model instance
-    # Specify checkpoint directory
+    # model是重新初始化的
+    # 指定checkpoint目录
     checkpoint_directory = 'models_checkpoints/SimpleNN/'
     # Create model checkpoint
     checkpoint = tfe.Checkpoint(optimizer=optimizer,
@@ -59,11 +59,14 @@ if __name__ == '__main__':
     X_test, y_test = tf.constant(X[80:, :]), tf.constant(y[80:])
     optimizer = tf.train.GradientDescentOptimizer(5e-1)
     model = simple_nn()
+    # 执行各个步骤时，另一个步骤的代码要注释掉
+    # 步骤一：训练模型并保存
     # fit_and_save(model,optimizer,X_train,y_train) #Loss at epoch 500: 0.035850
-    print('--------------restore test--------------')
+    # 步骤二：恢复模型
     restore_model(model,optimizer)
-    # model.fit(X_test, y_test, optimizer, num_epochs=1)
-
+    # 运行一个批次检查loss是否和保存之前的结果近似
+    # model.fit(X_train, y_train, optimizer, num_epochs=1)
+    # test集合上测试
     logits = model.predict(X_test)
     preds = tf.argmax(logits, axis=1)
     conf_matrix = tf.confusion_matrix(y_test, preds, num_classes=2)
