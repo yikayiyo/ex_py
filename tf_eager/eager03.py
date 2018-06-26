@@ -72,3 +72,11 @@ if __name__ == '__main__':
     print('Average precision: ', precision_score.numpy())
     recall_score = recall(y, preds, conf_matrix, weights=None)
     print('Average recall: ', recall_score.numpy())
+    # - 0- looks good
+    # 混淆矩阵:
+    # [[11  0]
+    #  [0  9]]
+    # Average
+    # precision: 1.0
+    # Average
+    # recall: 1.0
