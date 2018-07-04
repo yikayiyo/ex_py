@@ -115,7 +115,7 @@ def parse_imdb_sequence(record):
 
     return (sequence_parsed['token_indexes'], context_parsed['target'],
             context_parsed['sequence_length'])
-
-imdb2tfrecords()
-record = 'dataset/aclImdb/train/dummy.tfrecords'
-print(parse_imdb_sequence(record=record))
+if __name__ == '__main__':
+    # imdb2tfrecords()
+    record = 'dataset/aclImdb/train/dummy.tfrecords'
+    print(parse_imdb_sequence(record=record))
