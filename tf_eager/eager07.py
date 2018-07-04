@@ -216,6 +216,11 @@ def train():
     plt.ylabel('Loss', fontsize=15)
     plt.legend(fontsize=15)
     plt.show()
+    train_acc = model.compute_accuracy(training_data)
+    eval_acc = model.compute_accuracy(eval_data)
+
+    print('Train accuracy: ', train_acc.result().numpy())
+    print('Eval accuracy: ', eval_acc.result().numpy())
 
 if __name__ == '__main__':
     train()
