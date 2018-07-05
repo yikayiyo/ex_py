@@ -9,27 +9,38 @@ import pickle
 import nltk
 from nltk.tokenize import word_tokenize
 import re
+
 tfe.enable_eager_execution()
 
 '''
-- 下载数据转换格式为TFRecord.
-- 利用迭代器从磁盘中批量读取数据，并自动填充
+- 下载数据,转换格式为TFRecord.
+- 利用迭代器从磁盘中批量读取数据，并自动补长.
 - 构建一个单词层级的RNN模型,分别使用LSTM and UGRNN cells.
 - 比较测试集上的结果.
-- 保存恢复模型.
-- 实验新评论的检测效果
+- 保存、恢复模型.
+- 新评论检测效果
 '''
 
-class RNNModel(tf.keras.Model):
 
-    def __init__(self,embedding_size=100, cell_size=64, dense_size=128,
+class RNNModel(tf.keras.Model):
+    def __init__(self, embedding_size=100, cell_size=64, dense_size=128,
                  num_classes=2, vocabulary_size=None, rnn_cell='lstm',
                  device='cpu:0', checkpoint_directory=None):
+        '''
+        :param embedding_size: 词向量维度
+        :param cell_size: number of units in the cell, 也是hidden state的维度
+        :param dense_size: 在求概率之前经过该层
+        :param num_classes: 输出类别数
+        :param vocabulary_size: 词典大小
+        :param rnn_cell: cell类型
+        :param device: 指定设备
+        :param checkpoint_directory: cpt目录
+        '''
         super(RNNModel, self).__init__()
-        #指明参数初始化的方法
+        # 指明参数初始化的方法
         w_initializer = tf.contrib.layers.xavier_initializer()
         b_initializer = tf.zeros_initializer()
-        # 初始化word embeddings权重
+        # 初始化word embeddings权重，需要一个矩阵初始化器件
         self.embeddings = tf.keras.layers.Embedding(vocabulary_size, embedding_size,
                                                     embeddings_initializer=w_initializer)
         # 中间层
@@ -37,7 +48,7 @@ class RNNModel(tf.keras.Model):
                                                  kernel_initializer=w_initializer,
                                                  bias_initializer=b_initializer)
 
-        # 输出层
+        # 输出层，输出0 or 1
         self.pred_layer = tf.keras.layers.Dense(num_classes, activation=None,
                                                 kernel_initializer=w_initializer,
                                                 bias_initializer=b_initializer)
@@ -45,15 +56,22 @@ class RNNModel(tf.keras.Model):
         # LSTM cell
         if rnn_cell == 'lstm':
             self.rnn_cell = tf.nn.rnn_cell.BasicLSTMCell(cell_size)
-        # Else UGRNN cell
+        # Else UGRNN cell，介于RNN和LSTM/GRU之间，只有一个门决定集成或者计算是否应该及时进行
         else:
             self.rnn_cell = tf.contrib.rnn.UGRNNCell(cell_size)
 
         self.device = device
         self.checkpoint_directory = checkpoint_directory
 
-    def predict(self,X,seq_length,is_training):
-        # 一个batch里的样本数
+    def predict(self, X, seq_length, is_training):
+        '''
+        模型从输入到输出的一个流程
+        :param X: 一个batch的样本--->(BATCH_SIZE,EMBEDDING_SIZE)
+        :param seq_length: 序列长度就是time step的长短
+        :param is_training: 很重要的参数，决定了代码的走向
+        :return:
+        '''
+        # 获取一个batch里的样本数
         num_samples = tf.shape(X)[0]
         # 初始化LSTM cell状态
         state = self.rnn_cell.zero_state(num_samples, dtype=tf.float32)
@@ -69,39 +87,37 @@ class RNNModel(tf.keras.Model):
         # Stack outputs to (batch_size, time_steps, cell_size)
         outputs = tf.stack(outputs, axis=1)
 
-        # 提取最后一个timestep的输出---idxs_last_output.shape-->(batchsize,2)
+        # 提取BATCH样本的最后一个timestep输出---idxs_last_output.shape-->(batchsize,2):比如[[0,192],[1,192],...,[511,192]]
         idxs_last_output = tf.stack([tf.range(num_samples),
                                      tf.cast(seq_length - 1, tf.int32)], axis=1)
         final_output = tf.gather_nd(outputs, idxs_last_output)
 
         # Add dropout for regularization
+        # training: return the output in training mode(apply dropout) or in inference mode (return the input untouched).
         dropped_output = tf.layers.dropout(final_output, rate=0.3, training=is_training)
-
-        # Pass the last cell state through a dense layer (ReLU activation)
+        # 将最后一个timestep的cell state输入一个dense layer(ReLU activation)
         dense = self.dense_layer(dropped_output)
-        # Compute the unnormalized log probabilities
+        # 最终计算the unnormalized log probabilities
         logits = self.pred_layer(dense)
         return logits
-
 
     def loss_fn(self, X, y, seq_length, is_training):
         preds = self.predict(X, seq_length, is_training)
         loss = tf.losses.sparse_softmax_cross_entropy(labels=y, logits=preds)
         return loss
 
-
     def grads_fn(self, X, y, seq_length, is_training):
         """ Dynamically computes the gradients of the loss value
             with respect to the parameters of the model, in each
             forward pass.
+            除了loss_fn的参数，这个函数在所有的模型里都一样
         """
         with tfe.GradientTape() as tape:
             loss = self.loss_fn(X, y, seq_length, is_training)
         return tape.gradient(loss, self.variables)
 
-
     def restore_model(self):
-
+        #恢复模型，先随机数据跑一趟？
         with tf.device(self.device):
             dummy_input = tf.constant(tf.zeros((1, 1)))
             dummy_length = tf.constant(1, shape=(1,))
@@ -110,8 +126,7 @@ class RNNModel(tf.keras.Model):
             saver.restore(tf.train.latest_checkpoint
                           (self.checkpoint_directory))
 
-    def save_model(self,global_step=0):
-        '''Function to save trained model'''
+    def save_model(self, global_step=0):
         tfe.Saver(self.variables).save(self.checkpoint_directory,
                                        global_step=global_step)
 
@@ -134,16 +149,14 @@ class RNNModel(tf.keras.Model):
                 for X, y, seq_length in tfe.Iterator(training_data):
                     grads = self.grads_fn(X, y, seq_length, True)
                     optimizer.apply_gradients(zip(grads, self.variables))
-
                 # Check accuracy train dataset
                 for X, y, seq_length in tfe.Iterator(training_data):
                     logits = self.predict(X, seq_length, False)
                     preds = tf.argmax(logits, axis=1)
                     train_acc(preds, y)
                 self.history['train_acc'].append(train_acc.result().numpy())
-                # Reset metrics
+                # 每一个epoch都要重置
                 train_acc.init_variables()
-
                 # Check accuracy eval dataset
                 for X, y, seq_length in tfe.Iterator(eval_data):
                     logits = self.predict(X, seq_length, False)
@@ -152,12 +165,10 @@ class RNNModel(tf.keras.Model):
                 self.history['eval_acc'].append(eval_acc.result().numpy())
                 # Reset metrics
                 eval_acc.init_variables()
-
                 # Print train and eval accuracy
                 if (i == 0) | ((i + 1) % verbose == 0):
                     print('Train accuracy at epoch %d: ' % (i + 1), self.history['train_acc'][-1])
                     print('Eval accuracy at epoch %d: ' % (i + 1), self.history['eval_acc'][-1])
-
                 # Check for early stopping
                 if self.history['eval_acc'][-1] > best_acc:
                     best_acc = self.history['eval_acc'][-1]
@@ -167,13 +178,13 @@ class RNNModel(tf.keras.Model):
                 if count == 0:
                     break
 
+
 def process_new_review(review):
-    '''Function to process a new review.
+    '''处理新评论.
        Args:
            review: original text review, string.
        Returns:
-           indexed_review: sequence of integers, words correspondence
-                           from word2idx.
+           indexed_review: sequence of integers, words correspondence from word2idx.
            seq_length: the length of the review.
     '''
     indexed_review = re.sub(r'<[^>]+>', ' ', review)
@@ -183,6 +194,7 @@ def process_new_review(review):
     indexed_review = indexed_review + [word2idx['End_token']]
     seq_length = len(indexed_review)
     return indexed_review, seq_length
+
 
 def test():
     try:
@@ -206,28 +218,24 @@ def test():
                   % (score, sent_dict[pred]))
 
 
-
-
 if __name__ == '__main__':
+    print(tfe.num_gpus())
     train_dataset = tf.data.TFRecordDataset('dataset/aclImdb/train.tfrecords')
     train_dataset = train_dataset.map(parse_imdb_sequence).shuffle(buffer_size=10000)
     train_dataset = train_dataset.padded_batch(512, padded_shapes=([None], [], []))
-
     test_dataset = tf.data.TFRecordDataset('dataset/aclImdb/test.tfrecords')
     test_dataset = test_dataset.map(parse_imdb_sequence).shuffle(buffer_size=10000)
     test_dataset = test_dataset.padded_batch(512, padded_shapes=([None], [], []))
-
-    # Read the word vocabulary
+    # 加载词典
     word2idx = pickle.load(open('dataset/aclImdb/word2idx.pkl', 'rb'))
-
     checkpoint_directory = 'models_checkpoints/ImdbRNN/'
-    device = 'gpu:0' if tfe.num_gpus() > 0 else 'cpu:0'
+    # device = 'gpu:0' if tfe.num_gpus() > 0 else 'cpu:0'
+    device = 'cpu:0'
     optimizer = tf.train.AdamOptimizer(learning_rate=1e-4)
     lstm_model = RNNModel(vocabulary_size=len(word2idx), device=device,
                           checkpoint_directory=checkpoint_directory)
-    # lstm_model.fit(train_dataset, test_dataset, optimizer, num_epochs=10,
-    #                early_stopping_rounds=5, verbose=1, train_from_scratch=True)
+    lstm_model.fit(train_dataset, test_dataset, optimizer, num_epochs=10,early_stopping_rounds=5, verbose=1, train_from_scratch=True)
     # Save model
-    # lstm_model.save_model()
-    lstm_model.restore_model()
+    lstm_model.save_model()
+    # lstm_model.restore_model()
     test()
