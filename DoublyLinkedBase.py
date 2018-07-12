@@ -59,16 +59,16 @@ class DoublyLinkedBase():
             p = p._next
             size -=1
         return '-'.join(s)
-
-if __name__ == '__main__':
-    dl = DoublyLinkedBase()
-    print(dl)
-    node5 = dl.insert_between(5,dl._header,dl._trailer)
-    print(dl._size)
-    node6 = dl.insert_between(6,node5,dl._trailer)
-    print(dl._size)
-    node7 = dl.insert_between(7,node6,dl._trailer)
-    print(dl._size)
-    print(dl)
-    node = dl._delete_node(node6)
-    print(dl)
+#
+# if __name__ == '__main__':
+#     dl = DoublyLinkedBase()
+#     print(dl)
+#     node5 = dl.insert_between(5,dl._header,dl._trailer)
+#     print(dl._size)
+#     node6 = dl.insert_between(6,node5,dl._trailer)
+#     print(dl._size)
+#     node7 = dl.insert_between(7,node6,dl._trailer)
+#     print(dl._size)
+#     print(dl)
+#     node = dl._delete_node(node6)
+#     print(dl)
