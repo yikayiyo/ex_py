@@ -15,10 +15,10 @@ class LinkedDeque(DoublyLinkedBase):
         return self._trailer._prev._elem
 
     def insert_first(self,e):
-        self.insert_between(e,self._header,self._header._next)
+        self._insert_between(e,self._header,self._header._next)
 
     def insert_last(self,e):
-        self.insert_between(e,self._trailer._prev,self._trailer)
+        self._insert_between(e,self._trailer._prev,self._trailer)
 
     def delete_first(self):
         if self.is_empty():

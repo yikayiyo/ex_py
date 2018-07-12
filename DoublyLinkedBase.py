@@ -27,7 +27,7 @@ class DoublyLinkedBase():
     def is_empty(self):
         return self._size==0
 
-    def insert_between(self,e,predecessor,successor):
+    def _insert_between(self,e,predecessor,successor):
         newest = self._Node(e,prev=predecessor,next=successor)
         predecessor._next = newest
         successor._prev = newest
@@ -63,11 +63,11 @@ class DoublyLinkedBase():
 # if __name__ == '__main__':
 #     dl = DoublyLinkedBase()
 #     print(dl)
-#     node5 = dl.insert_between(5,dl._header,dl._trailer)
+#     node5 = dl._insert_between(5,dl._header,dl._trailer)
 #     print(dl._size)
-#     node6 = dl.insert_between(6,node5,dl._trailer)
+#     node6 = dl._insert_between(6,node5,dl._trailer)
 #     print(dl._size)
-#     node7 = dl.insert_between(7,node6,dl._trailer)
+#     node7 = dl._insert_between(7,node6,dl._trailer)
 #     print(dl._size)
 #     print(dl)
 #     node = dl._delete_node(node6)
