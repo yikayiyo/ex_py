@@ -17,7 +17,7 @@ class PositionalList(DoublyLinkedBase):
         '''return positon's node,or raise error if invalid.'''
         if not isinstance(p, self.Position):
             raise TypeError('p must be proper Position type')
-        if p.container is not self:
+        if p._container is not self:
             raise ValueError('p does not belong to this container')
         if p._node._next is None:
             raise ValueError('p is no longer valid')
@@ -86,3 +86,16 @@ class PositionalList(DoublyLinkedBase):
         old_value = original._elem
         original._elem = e
         return old_value
+
+if __name__ == '__main__':
+    pl = PositionalList()
+    assert pl.first() is None
+    p5 = pl.add_first(5)
+    p4 = pl.add_last(4)
+    p2 = pl.add_last(2)
+    assert len(pl)==3
+    pl.add_after(p5,3)
+    assert str(pl)=='5-3-4-2','not 5342'
+    pl.replace(p5,6)
+    # print(pl)
+    assert str(pl) == '6-3-4-2', 'not 6342'
